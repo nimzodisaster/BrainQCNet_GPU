@@ -30,9 +30,11 @@ parser.add_argument('analysis_level', choices=['participant', 'group'],
                     help='Level of analysis to perform (participant or group).')
 parser.add_argument('--participant_label', nargs='+',
                     help='Space-separated list of participant labels to analyze (without "sub-"). If not provided, all participants are analyzed.')
+parser.add_argument('--session_label', nargs='+',
+                    help='Space-separated list of session labels to analyze (without "ses-"). If not provided, all sessions are analyzed.')
 parser.add_argument('--pythonpath', default='venv/bin', help='Path to Python environment.')
 parser.add_argument('--gpuid', default='0,1', help='Comma-separated list of GPU IDs.')
-parser.add_argument('--rtol', default='0.01', help='relative tolerance (with respect to maximal absolute value of the image), under which values are considered negligeable and thus croppable. used in niilearn crop_img')
+parser.add_argument('--rtol', default='0.01', help='relative tolerance (with respect to maximal absolute value of the image), under which values are considered negligible and thus croppable. Used in nilearn crop_img')
 parser.add_argument('--masks', default='0', help='0: return log file; 1: predict and save prototypes.')
 parser.add_argument('--pred_method', default='percentage',
                     help='Method for prediction: "percentage", "mean", or "median".')
@@ -57,6 +59,13 @@ if args.analysis_level == "participant":
         session_dirs = glob(os.path.join(args.bids_dir, f"sub-{subject_label}", "ses-*"))
         if not session_dirs:  # Handle single-session datasets
             session_dirs = [os.path.join(args.bids_dir, f"sub-{subject_label}")]
+        
+        # Filter sessions if session_label is provided
+        if args.session_label:
+            session_dirs = [
+                session_dir for session_dir in session_dirs 
+                if os.path.basename(session_dir).split("-")[-1] in args.session_label
+            ]
         
         for session_dir in session_dirs:
             session = os.path.basename(session_dir).split("-")[-1] if "ses-" in session_dir else "single_session"
