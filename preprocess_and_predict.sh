@@ -10,7 +10,7 @@ MODELRUN="19112020"
 MODEL="10push0.8167.pth"
 
 hibou() {
-	$3/python3 crop_nii.py -inpath $1 -outdir $2 -filename $4
+	$3/python3 crop_nii.py -inpath $1 -outdir $2 -filename $4 -rtol $5
 }
 
 chouette() {
@@ -40,10 +40,11 @@ MASKS=$7
 PRED_METHOD=$8
 N_AREAS=$9
 MODELDIR=${10}
+RTOL=${11}
 # Activating virtual environment
 . $PYTHONPATH/activate
 # Cropping 3D image
-hibou $INPATH . $PYTHONPATH $FILENAME
+hibou $INPATH . $PYTHONPATH $FILENAME $RTOL
 # Generating 2D slices in all 3 axes from 3D images
 mkdir -p $OUTDIR/$SUBID
 chouette $FILENAME $SUBID $OUTDIR/$SUBID
