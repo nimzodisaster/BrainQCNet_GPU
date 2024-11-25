@@ -79,7 +79,7 @@ if args.analysis_level == "participant":
                 output_subdir = os.path.join(args.output_dir, f"sub-{subject_label}", f"ses-{session}")
                 os.makedirs(output_subdir, exist_ok=True)
                 
-                cmd = f"./preprocess_and_predict.sh {T1_file} {filename} sub-{subject_label} {output_subdir} {args.pythonpath} {args.gpuid} {args.masks} {args.pred_method} {args.n_areas} {args.modeldir}"
+                cmd = f"./preprocess_and_predict.sh {T1_file} {filename} sub-{subject_label} {output_subdir} {args.pythonpath} {args.gpuid} {args.masks} {args.pred_method} {args.n_areas} {args.modeldir} {args.ntol}"
                 run(cmd)
 
 # Group-level analysis
