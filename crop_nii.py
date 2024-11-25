@@ -1,42 +1,44 @@
 #!/usr/bin/python3
 
-import numpy as np
-import nibabel as nib
+import os
 import argparse
+import subprocess
+import nibabel as nib
+from nilearn.image import crop_img, load_img
 
 parser = argparse.ArgumentParser()
-# parser.add_argument('-indir', nargs=1, type=str) 
-parser.add_argument('-inpath', nargs=1, type=str) 
-parser.add_argument('-outdir', nargs=1, type=str) 
-parser.add_argument('-filename', nargs=1, type=str) 
+parser.add_argument('-inpath', required=True, type=str, help='Path to the input NIfTI file')
+parser.add_argument('-outdir', required=True, type=str, help='Output directory for the cropped file')
+parser.add_argument('-filename', required=True, type=str, help='Output filename for the cropped file')
+parser.add_argument('-rtol', type=float, default=0.01, help='Relative tolerance for nilearn cropping (default: 0.01)')
+
 args = parser.parse_args()
 
-# indir = args.indir[0]
-inpath = args.inpath[0]
-outdir = args.outdir[0]
-filename = args.filename[0]
+inpath = args.inpath
+outdir = args.outdir
+filename = args.filename
+rtol = args.rtol
 
-# proxy_img = nib.load(indir+ "/" + filename)
-proxy_img = nib.load(inpath)
-img = np.asarray(proxy_img.dataobj)
-affine = proxy_img.affine
-proxy_img.uncache()
-img = np.squeeze(img)
+# Ensure output directory exists
+os.makedirs(outdir, exist_ok=True)
 
-# https://codereview.stackexchange.com/questions/132914/crop-black-border-of-image-using-numpy
-# Mask of non-black pixels (assuming image has a single channel).
-mask = img > 0
+# Step 1: Run FSL's robustfov to perform initial cropping
+robustfov_output = os.path.join(outdir, "robustfov_" + filename)
+robustfov_cmd = f"robustfov -i {inpath} -r {robustfov_output}"
+print(f"Running: {robustfov_cmd}")
+subprocess.run(robustfov_cmd, shell=True, check=True)
 
-# Coordinates of non-black pixels.
-coords = np.argwhere(mask)
+# Step 2: Load robustfov output and apply nilearn's crop_img with rtol
+print(f"Applying nilearn cropping with rtol={rtol}...")
+robustfov_img = load_img(robustfov_output)
+cropped_img = crop_img(robustfov_img, rtol=rtol)
 
-# Bounding box of non-black pixels.
-x0, y0, z0 = coords.min(axis=0)
-x1, y1, z1 = coords.max(axis=0) + 1   # slices are exclusive at the top
+# Step 3: Save the final cropped image
+final_output_path = os.path.join(outdir, filename)
+cropped_img.to_filename(final_output_path)
 
-# Get the contents of the bounding box.
-cropped = img[x0:x1, y0:y1, z0:z1]
+# Step 4: Clean up intermediate robustfov file
+os.remove(robustfov_output)
+print(f"Deleted intermediate file: {robustfov_output}")
 
-# filename = inpath.split("/")[-1]
-nib.save(filename=outdir + "/" + filename, img=nib.Nifti1Image(cropped, affine))
-
+print(f"Final cropped file saved to: {final_output_path}")
