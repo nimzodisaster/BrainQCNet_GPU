@@ -32,6 +32,7 @@ parser.add_argument('--participant_label', nargs='+',
                     help='Space-separated list of participant labels to analyze (without "sub-"). If not provided, all participants are analyzed.')
 parser.add_argument('--pythonpath', default='venv/bin', help='Path to Python environment.')
 parser.add_argument('--gpuid', default='0,1', help='Comma-separated list of GPU IDs.')
+parser.add_argument('--rtol', default='0.01', help='relative tolerance (with respect to maximal absolute value of the image), under which values are considered negligeable and thus croppable. used in niilearn crop_img')
 parser.add_argument('--masks', default='0', help='0: return log file; 1: predict and save prototypes.')
 parser.add_argument('--pred_method', default='percentage',
                     help='Method for prediction: "percentage", "mean", or "median".')
